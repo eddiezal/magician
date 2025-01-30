@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "cloud4marketing-281206",
+  "private_key_id": "f732ef8736c76095ae19c2ef8c874e6a14fab2b5",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCk9oN3bULEiiTk\nTLFN8YP3E/6xWbfJfgNNsoGouznph75C+w43nY0u24IYGtcQ6nngmgeX0MlPZcVs\n19rEwT8ZOnSR179jGSuqlf9JSuVdxUJXWour8+ZWqMtLINh4JCwzB8NOYshqZWrU\nVNWEIOte7pVJYwzr77pyczD5a5aZPWk3c56UDjSb/27VZ6C+X5MzmhIGgPf/XPs2\n+kflxyoTrrmfQjbt0qFjIaoMJ3UBGJo9FRJDTK0QF2Ndpudxf9rISWyvtGO8ywde\ndisiZ/Gy6sikJf21DI3eWAbYPWz0r5sBX0zbyfsuSt6LEyFyznko6S9LeWj3SOzM\nLrczSjitAgMBAAECggEAGgjJsMRuoCQJNHqiFOID6K+gJ484QTWBAfclHWMG/cMt\nlNaYZNCZooaEHpfFz2ah+39zqVMLIlu2b7oVTa4N7kZadVXuX45uZMqtcny+fDEQ\nikbA+k9Qz+ZtxxqU70kOLLOR8EIIzTnaRU5qMCMd4mqW5vEZ7fZ0n3FsjkCbkO1u\nSs206D7eupwvGtwcn1Hz/esmThjcBRbfdZjTDJ6si3hlxqbyIweZD3CCTPEZHBzl\n6Nq9rs7m3qvYiJCvvyDOTZpAAj3AA87RDSvc9R14slbSh9xJJyhy5ljxKt53QtFM\n7H/E3p7ykTpxbj0iG+Gvf278xsokNSvdrXsgs5SFgQKBgQDW0vC132ozYlGT6993\nmj/18BIaZwXhdH8qO/Vd+pML2r1ZmlrekCR39otqoLqqR66hyIdT5h3OnJ5+oHwj\nb3OjyKz/FD1mIL9TLPnp9P0bXXj8Fl0u6/XBRoO9cw1DHYXU8jL7AfNRkUoRX/JC\ncxUT8lMtB/OsdRBCfMhwUIucTQKBgQDElPlTPDt7VcYRlhDl9MKw8a0J7sEbGRBY\nKLoy+QvYEwzquQYdroxshfemRhctQMCflJcWEW4wqOqxl9ZIWzyeAJAJmdZTSKnk\nKT7Rv69zp/OfGBKwdFnyhEejeA64uKGZj9YtTwoKgl7p0DQxa2V0h/rp47aR+ojJ\nwph+A3W94QKBgC7OIOIPfm0Zo9qNzs+ZTQxBtUAJaE+Z+Ubzb199g+JWU2Edb2UE\nlN2KWw/tWx5Upejb7xhJj/7/Qs0mHEYAN3rc80xUVZhV1DnEF+NwnGEE+aI7ISxi\n/tWQjo2NbrtLyGgAKTllUGVaOYAVnov51QLWjmbGT8Ioc1V5KJbIBdMVAoGAetQu\nmSB4dg7ZDKH8ewKdJ5xKJ3uj8v+NI9iGx1SvXtpAZuUm+iLXIPPwEleXIbJk6REZ\n+jL367WPt1mNDXbcgEkPtsAFl9I+PQ68bqhbw2M8qLqM6u44SXz3mh9o62iJqH6k\nL3lEZ96f2W47PmnBYbeZQs0ChWHKWG6bg5k712ECgYEAmtcLj+3nkukDdHOeq5wa\ngfAEHgz488Hd88cW5wr7IHpG+I54z4YnlWXX6osmqNJ/JLYEdv1e5/tMVyCMomci\nvvDtPCMAFCqif8z/I3uuL2nxIt7heyQdj4QeRXnTV5878tCC+3azPIY9Nb/IV/iE\nsy+ObtOEJqusZHgPB5pSxHQ=\n-----END PRIVATE KEY-----\n",
+  "client_email": "coinbasedatafetcher@cloud4marketing-281206.iam.gserviceaccount.com",
+  "client_id": "118048758085224055177",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/coinbasedatafetcher%40cloud4marketing-281206.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

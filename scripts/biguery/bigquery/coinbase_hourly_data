@@ -1,0 +1,22 @@
+from google.cloud import bigquery
+import os
+
+# Set up Google Cloud authentication
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/eddie/OneDrive/code/magician/config/cloud4marketing-281206-f732ef8736c7.json"
+
+# Initialize BigQuery Client
+client = bigquery.Client()
+
+# Define table to delete
+PROJECT_ID = "cloud4marketing-281206"
+DATASET_ID = "crypto_price"
+TABLE_ID = "coinbase_hourly_data"
+TABLE_PATH = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+
+try:
+    # Delete table
+    client.delete_table(TABLE_PATH, not_found_ok=True)
+    print(f"\n✅ Table `{TABLE_PATH}` deleted successfully!")
+
+except Exception as e:
+    print(f"\n❌ Error deleting table: {e}")

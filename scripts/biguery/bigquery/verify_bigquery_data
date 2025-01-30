@@ -1,0 +1,79 @@
+from google.cloud import bigquery
+import os
+
+# Set up authentication
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/eddie/OneDrive/code/magician/config/cloud4marketing-281206-f732ef8736c7.json"
+
+# Initialize BigQuery Client
+client = bigquery.Client()
+
+# Define project and dataset
+PROJECT_ID = "cloud4marketing-281206"
+DATASET_ID = "crypto_price"
+TABLES = ["coinbase_hourly_prices", "coinbase_assets"]
+
+# Table metadata dictionary for validation & fixing
+TABLE_METADATA = {
+    "coinbase_hourly_prices": {
+        "description": "Hourly crypto price data from Coinbase, including open, high, low, close, and volume.",
+        "labels": {"source": "coinbase", "type": "historical_prices"}
+    },
+    "coinbase_assets": {
+        "description": "List of all available crypto assets on Coinbase.",
+        "labels": {"source": "coinbase", "type": "metadata"}
+    }
+}
+
+def list_tables():
+    """List all tables in the dataset."""
+    try:
+        tables = client.list_tables(f"{PROJECT_ID}.{DATASET_ID}")
+        print("\n✅ Tables in `crypto_price` dataset:")
+        for table in tables:
+            print(f"- {table.table_id}")
+    except Exception as e:
+        print(f"\n❌ Error fetching tables: {e}")
+
+def check_columns():
+    """Check schema for `coinbase_hourly_prices`."""
+    try:
+        table_path = f"{PROJECT_ID}.{DATASET_ID}.coinbase_hourly_prices"
+        table = client.get_table(table_path)  
+
+        print(f"\n✅ Schema for `{table_path}`:")
+        for field in table.schema:
+            print(f"- {field.name} ({field.field_type})")
+    except Exception as e:
+        print(f"\n❌ Error fetching schema: {e}")
+
+def check_and_fix_metadata():
+    """Verify and fix missing metadata."""
+    try:
+        for table_id, meta in TABLE_METADATA.items():
+            table_path = f"{PROJECT_ID}.{DATASET_ID}.{table_id}"
+            table = client.get_table(table_path)
+
+            # Check if metadata is missing
+            missing_metadata = False
+            if table.description != meta["description"]:
+                table.description = meta["description"]
+                missing_metadata = True
+            
+            if table.labels != meta["labels"]:
+                table.labels = meta["labels"]
+                missing_metadata = True
+
+            # Fix missing metadata
+            if missing_metadata:
+                client.update_table(table, ["description", "labels"])
+                print(f"\n✅ Fixed metadata for `{table_path}`")
+            else:
+                print(f"\n✅ Metadata is correct for `{table_path}`")
+
+    except Exception as e:
+        print(f"\n❌ Error updating metadata: {e}")
+
+# Run all verifications
+list_tables()
+check_columns()
+check_and_fix_metadata()
