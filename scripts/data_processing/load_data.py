@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split  
 import os
 from google.cloud import bigquery  # ✅ Ensure this import is present
+from scripts.indicators.compute_indicators import get_optimal_timeframe  # Import the new function
 
 # 🔥 Set the path to your credentials file
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = r"C:\Users\eddie\OneDrive\code\magician\config\cloud_credentials.json"
@@ -28,6 +29,9 @@ def load_data():
         WHERE DATETIME(timestamp) >= DATETIME_SUB(CURRENT_DATETIME(), INTERVAL 6 MONTH)
     """
     df = client.query(query).to_dataframe()
+
+    # Fetch optimal timeframes for each asset
+    optimal_timeframes = get_optimal_timeframe(df)
 
     # 📊 Split into X (features) and y (target)
     if "target" not in df.columns:
