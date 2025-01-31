@@ -1,0 +1,116 @@
+import os
+import pandas as pd
+import numpy as np
+from google.cloud import bigquery, bigquery_storage
+from sklearn.preprocessing import MinMaxScaler
+from pandas_gbq import to_gbq  # Explicit import
+
+# Set up authentication for BigQuery
+CREDENTIALS_PATH = r"C:\Users\eddie\OneDrive\code\magician\config\cloud_credentials.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS_PATH
+
+# Initialize BigQuery Client
+client = bigquery.Client()
+bqstorage_client = bigquery_storage.BigQueryReadClient()  # Use Storage API
+
+# Define BigQuery Table Paths
+PROJECT_ID = "cloud4marketing-281206"
+DATASET_ID = "crypto_price"
+RAW_TABLE = f"{PROJECT_ID}.{DATASET_ID}.coinbase_hourly_prices"
+CLEANED_TABLE = f"{PROJECT_ID}.{DATASET_ID}.cleaned_data"
+
+# 1️⃣ Load Data from BigQuery
+query = f"""
+    SELECT asset, timestamp, open_price, high_price, low_price, close_price, volume
+    FROM `{RAW_TABLE}`
+    ORDER BY asset, timestamp
+"""
+df = client.query(query).to_dataframe(bqstorage_client=bqstorage_client)
+
+# 2️⃣ Remove Duplicates (Average Prices)
+df = df.groupby(["asset", "timestamp"], as_index=False).agg({
+    "open_price": "mean",
+    "high_price": "mean",
+    "low_price": "mean",
+    "close_price": "mean",
+    "volume": "mean"
+})
+
+# 3️⃣ Handle Missing Values
+df.sort_values(by=["asset", "timestamp"], inplace=True)
+
+# Forward-fill missing prices per asset
+df[["open_price", "high_price", "low_price", "close_price"]] = (
+    df.groupby("asset")[["open_price", "high_price", "low_price", "close_price"]].transform(lambda x: x.ffill())
+)
+
+# Replace missing volume with 0
+df["volume"] = df["volume"].fillna(0)
+
+# 4️⃣ Normalize & Scale Prices (0-1)
+scaler = MinMaxScaler(feature_range=(0, 1))
+
+def scale_prices(group):
+    """Applies MinMax scaling to each asset group."""
+    if group[["open_price", "high_price", "low_price", "close_price"]].isnull().sum().sum() > 0:
+        print(f"⚠️ Warning: NaN values detected in {group.name}. Forward-filling.")
+        group = group.fillna(method="ffill")
+
+    scaled_values = scaler.fit_transform(group[["open_price", "high_price", "low_price", "close_price"]])
+    return pd.DataFrame(scaled_values, columns=["open_price", "high_price", "low_price", "close_price"], index=group.index)
+
+# Apply Scaling
+df.update(df.groupby("asset", group_keys=False, as_index=False).apply(scale_prices))
+
+# Clip Any Values Outside the [0,1] Range
+df[["open_price", "high_price", "low_price", "close_price"]] = df[["open_price", "high_price", "low_price", "close_price"]].clip(0, 1)
+
+# 5️⃣ Detect Outliers (Extreme % Changes)
+df["price_change"] = df.groupby("asset")["close_price"].pct_change()
+df["is_outlier"] = (np.abs(df["price_change"]) > (5 * df["price_change"].std())).astype(int)
+
+# 6️⃣ Run Tests Before Uploading
+def run_tests(df):
+    """Runs data validation tests before uploading to BigQuery."""
+    tests_passed = True
+
+    # Test 1: Check for duplicates
+    duplicate_count = df.duplicated(subset=["asset", "timestamp"]).sum()
+    if duplicate_count > 0:
+        print(f"❌ Test Failed: {duplicate_count} duplicate rows found!")
+        tests_passed = False
+    else:
+        print("✅ Test Passed: No duplicate rows.")
+
+    # Test 2: Ensure no missing values in prices
+    missing_values = df[["open_price", "high_price", "low_price", "close_price"]].isnull().sum().sum()
+    if missing_values > 0:
+        print(f"❌ Test Failed: {missing_values} missing price values found!")
+        tests_passed = False
+    else:
+        print("✅ Test Passed: No missing prices.")
+
+    # Test 3: Ensure volume is never negative
+    negative_volumes = (df["volume"] < 0).sum()
+    if negative_volumes > 0:
+        print(f"❌ Test Failed: {negative_volumes} negative volume entries found!")
+        tests_passed = False
+    else:
+        print("✅ Test Passed: No negative volumes.")
+
+    # Test 4: Check normalized price range (0-1)
+    if df[["open_price", "high_price", "low_price", "close_price"]].apply(lambda col: ~col.between(0, 1)).any().any():
+        print("❌ Test Failed: Prices outside [0,1] range!")
+        tests_passed = False
+    else:
+        print("✅ Test Passed: All prices are within [0,1] range.")
+
+    return tests_passed
+
+# 7️⃣ Save Cleaned Data to BigQuery (Only if Tests Pass)
+if run_tests(df):
+    df.drop(columns=["price_change"], inplace=True)  # Drop temporary column
+    to_gbq(df, CLEANED_TABLE, project_id=PROJECT_ID, if_exists="replace")
+    print("✅ Data Cleaning Completed! Saved to BigQuery.")
+else:
+    print("❌ Data did NOT pass tests. Fix before uploading!")

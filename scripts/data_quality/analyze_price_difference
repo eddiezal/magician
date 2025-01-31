@@ -1,0 +1,69 @@
+import sys
+import os
+import pandas as pd
+import numpy as np
+import time
+from collections import defaultdict
+
+# Ensure the project root is in sys.path
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+if PROJECT_ROOT not in sys.path:
+    sys.path.append(PROJECT_ROOT)
+
+# Import BigQuery client setup
+from config import client, TABLE_PATH
+
+# Parameters
+NUM_ITERATIONS = 5  # Number of times to run the analysis
+SLEEP_TIME = 2  # Delay between iterations (seconds)
+
+# Function to fetch data from BigQuery
+def fetch_data():
+    query = f"""
+        SELECT asset, timestamp, open_price, high_price, low_price, close_price, volume
+        FROM `{TABLE_PATH}`
+        ORDER BY timestamp DESC
+    """
+    df = client.query(query).to_dataframe()
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    return df
+
+# Function to analyze price % difference
+def analyze_price_difference(df):
+    df["price_diff"] = (df["high_price"] - df["low_price"]) / df["low_price"] * 100  # Percentage difference
+    return df["price_diff"].describe()
+
+# Function to find duplicate percentages
+def calculate_duplicate_percentage(df):
+    duplicate_counts = df.duplicated(subset=["asset", "timestamp"], keep=False).sum()
+    total_rows = len(df)
+    duplicate_percentage = (duplicate_counts / total_rows) * 100
+    return duplicate_percentage
+
+# Run multiple times
+results = defaultdict(list)
+
+for i in range(NUM_ITERATIONS):
+    print(f"\n🔄 Iteration {i + 1}/{NUM_ITERATIONS}")
+
+    # Fetch data
+    df = fetch_data()
+
+    # Analyze price % difference distribution
+    price_diff_stats = analyze_price_difference(df)
+    results["price_diff"].append(price_diff_stats)
+
+    # Calculate duplicate percentage
+    duplicate_percentage = calculate_duplicate_percentage(df)
+    results["duplicate_percentage"].append(duplicate_percentage)
+
+    # Print results
+    print("\n📊 Price % Difference Distribution:\n", price_diff_stats)
+    print(f"\n🔍 Percentage of Duplicate Entries: {duplicate_percentage:.2f}%")
+
+    # Sleep before next iteration
+    if i < NUM_ITERATIONS - 1:
+        print("\n⏳ Waiting before next iteration...\n")
+        time.sleep(SLEEP_TIME)
+
+print("\n✅ Analysis completed!")

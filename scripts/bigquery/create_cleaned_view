@@ -1,0 +1,55 @@
+import os
+print(os.path.abspath("config/cloud_credentials.json"))
+
+from google.cloud import bigquery
+
+# Get the absolute path to the credentials file
+CREDENTIALS_PATH = os.path.abspath("../../config/cloud_credentials.json")
+
+# Verify that the credentials file exists
+if not os.path.exists(CREDENTIALS_PATH):
+    raise FileNotFoundError(f"❌ Credentials file not found at {CREDENTIALS_PATH}")
+
+# Set the environment variable
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS_PATH
+
+# Initialize BigQuery Client
+client = bigquery.Client()
+print("✅ BigQuery Client initialized successfully!")
+
+# Define project & dataset
+PROJECT_ID = "cloud4marketing-281206"
+DATASET_ID = "crypto_price"
+VIEW_ID = f"{PROJECT_ID}.{DATASET_ID}.cleaned_prices"
+
+# SQL query to create or replace the view
+QUERY = f"""
+CREATE OR REPLACE VIEW `{VIEW_ID}` AS
+SELECT 
+    asset,
+    timestamp,
+    AVG(open_price) AS open_price,
+    AVG(close_price) AS close_price,
+    AVG(high_price) AS high_price,
+    AVG(low_price) AS low_price,
+    AVG(volume) AS volume
+FROM `{PROJECT_ID}.{DATASET_ID}.coinbase_hourly_prices`
+GROUP BY asset, timestamp;
+"""
+
+try:
+    print("\n🔄 Creating or Updating View: `cleaned_prices`...")
+
+    # Run the query to create the view
+    client.query(QUERY).result()
+
+    # Set metadata description for the view
+    view = client.get_table(VIEW_ID)
+    view.description = "View to remove duplicate timestamps by averaging price and volume. \
+                        This ensures data consistency and avoids over-counting."
+    client.update_table(view, ["description"])
+
+    print("\n✅ View `cleaned_prices` successfully created with metadata!")
+
+except Exception as e:
+    print(f"\n❌ Error creating view: {e}")
