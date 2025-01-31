@@ -11,3 +11,8 @@ __pycache__/
 
 # Ignore VS Code settings
 .vscode/
+__pycache__/
+.ipynb_checkpoints/
+*.parquet
+*.pdf
+config/cloud_credentials*
